@@ -34,23 +34,110 @@ A **GPU-accelerated text generation framework** supporting both **Transformer-ba
 
 ### GPT-2 Generation
 
-**Input Prompt:**
+**Command:**
 ```python
-"The future of AI will"
+from models.gpt_generator import GPTGenerator
+import time
+
+print('=== GPT-2 Generation ===')
+gpt = GPTGenerator()
+start = time.time()
+output = gpt.generate_text(
+    'Artificial intelligence will', 
+    max_length=150,
+    temperature=0.7
+)
+print(f'Generated in {time.time()-start:.2f}s:\\n{output}')
 ```
-**Generated Output:**
-> "The future of AI will be shaped by breakthroughs in quantum machine learning and neuromorphic computing. By 2030, we expect AI systems to demonstrate human-like reasoning capabilities while maintaining energy efficiency comparable to biological brains."
+
+**Output:**
+```
+=== GPT-2 Generation ===
+The attention mask is not set and cannot be inferred from input because pad token is same as eos token. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Generated in 2.11s:
+Artificial intelligence will eventually become more versatile and more intelligent than any other form of artificial intelligence.
+
+The rise of artificial intelligence is due in large part to the increasing presence of artificial intelligence programs. These are computers that are programmed to perform tasks they cannot perform today. These programs are programmed to perform tasks that humans cannot perform today. They learn from the past, and are not programmed to perform the same tasks that are now performed today. Therefore, the future of artificial intelligence is uncertain.
+
+This is because the future of artificial intelligence is uncertain. Today, most of the world's population is expected to be about 75 percent autonomous. Today, most of the world's population is expected to be 100 percent autonomous. This means that the computer that
+```
 
 ---
 
 ### LSTM Generation
 
-**Input Seed:**
+**Command:**
 ```python
-"Artificial intelligence"
+from models.lstm_generator import LSTMModel, TextTokenizer
+from utils.preprocess import clean_text, create_sequences
+import numpy as np
+import tensorflow as tf
+import time
+
+print('=== LSTM Generation ===')
+with open('data/sample_texts.txt', 'r', encoding='utf-8') as f:
+    text = clean_text(f.read())
+    
+tokenizer = TextTokenizer(text)
+lstm = LSTMModel(tokenizer, seq_length=50)
+
+sequences, next_chars = create_sequences(text, seq_length=50)
+X = np.array([[tokenizer.char_to_idx[c] for c in seq] for seq in sequences])
+# Convert to one-hot encoding for input
+X = tf.keras.utils.to_categorical(X, num_classes=tokenizer.vocab_size)
+y = tf.keras.utils.to_categorical(
+    [tokenizer.char_to_idx[c] for c in next_chars],
+    num_classes=tokenizer.vocab_size
+)
+
+print('Training (3 epochs)...')
+train_start = time.time()
+lstm.train(X, y, epochs=3, batch_size=128)
+train_time = time.time() - train_start
+
+gen_start = time.time()
+generated = lstm.generate_text('The future of AI', length=200, temperature=0.6)     
+gen_time = time.time() - gen_start
+
+print('\nGenerated text:')
+print('-'*50)
+print(generated)
+print('-'*50)
+print(f'Training time: {train_time:.2f}s')
+print(f'Generation time: {gen_time:.2f}s')
+print(f'Total time: {train_time + gen_time:.2f}s')
 ```
-**Generated Text:**
-> "Artificial intelligence systems are becoming increasingly capable of understanding context and nuance in human language. The latest models can generate coherent paragraphs while maintaining thematic consistency across multiple sentences."
+
+**Output:**
+```
+=== LSTM Generation ===
+2025-05-20 00:33:44.398938: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX AVX2
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-05-20 00:33:44.865961: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1616] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 3506 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 3050 6GB Laptop GPU, pci bus id: 0000:01:00.0, compute capability: 8.6
+Training (3 epochs)...
+Epoch 1/3
+2025-05-20 00:33:47.583985: I tensorflow/stream_executor/cuda/cuda_dnn.cc:384] Loaded cuDNN version 8100
+2025-05-20 00:33:48.393887: I tensorflow/stream_executor/cuda/cuda_blas.cc:1614] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.    
+4/6 [===================>..........] - ETA: 0s - loss: 3.1847 
+Epoch 1: loss improved from inf to 3.13157, saving model to lstm_model.h5
+6/6 [==============================] - 3s 26ms/step - loss: 3.1316
+Epoch 2/3
+5/6 [========================>.....] - ETA: 0s - loss: 2.9673
+Epoch 2: loss improved from 3.13157 to 2.96774, saving model to lstm_model.h5
+6/6 [==============================] - 0s 21ms/step - loss: 2.9677
+Epoch 3/3
+4/6 [===================>..........] - ETA: 0s - loss: 2.9411
+Epoch 3: loss improved from 2.96774 to 2.93240, saving model to lstm_model.h5
+6/6 [==============================] - 0s 23ms/step - loss: 2.9324
+
+Generated text:
+--------------------------------------------------
+The future of AIm a e irert ecmrthecciree cacdeuineri eoee aln iniesadtedr rs slc e   ee eee ecul aoeniceei la aemu sitesepceseeera eansl o a i i r ri me naoemreai   i enipseanecoa gceee nooi  eineasceafteeee  r a ae
+--------------------------------------------------
+Training time: 3.73s
+Generation time: 10.45s
+Total time: 14.18s
+```
 
 ---
 
