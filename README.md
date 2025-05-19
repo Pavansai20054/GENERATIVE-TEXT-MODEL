@@ -260,15 +260,7 @@ python benchmark.py --model gpt --length 256 --batch_size 8
 
 ## 📝 License
 
-**MIT License**
-
-```
-Copyright (c) 2023 Rangdal Pavansai
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction...
-```
+Licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
 ---
 
